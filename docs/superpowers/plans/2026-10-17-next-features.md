@@ -153,3 +153,7 @@ Accepted 2026-10-17: Cassie approved 0.2 and requested weblog and /now managemen
 ## 0.3 follow-up
 
 Cassie approved status posting and asked to continue a little further. The 0.3 slice adds status creation plus read-only profile source viewing; detailed scope and verification are in `2026-10-17-posting-profile.md` and `../../VERIFICATION.md`. Profile editing, Pastebin, /now and weblog remain future work.
+
+## 0.4 continuation
+
+Cassie approved continuing after 0.3. Profile content editing now includes separate save/publish, conflict handling and uncertainty recovery. Pastebin, /now and weblog remain on the roadmap. See 2026-10-18-profile-editor.md.

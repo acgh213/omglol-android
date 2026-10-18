@@ -14,6 +14,9 @@ class ComposerViewModelTest {
     @After fun cleanup() { Dispatchers.resetMain() }
     private val scope = AddressScope(1, "one", false)
     private class Repo : FeatureRepository {
+            override suspend fun saveProfile(scope: AddressScope, content: String, publish: Boolean): ProfileSaved = error("Unexpected profile write")
+            override fun resetDemo() {}
+
         var posts = 0; var failure: ApiFailure? = null
         var last: StatusDraft? = null; var delayPost = false
         override suspend fun createStatus(scope: AddressScope, draft: StatusDraft): PostedStatus {

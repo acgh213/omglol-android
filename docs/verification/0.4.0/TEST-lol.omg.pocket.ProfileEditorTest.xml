@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="lol.omg.pocket.ProfileEditorTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-18T11:51:53.154Z" hostname="e131887b53c5" time="0.013">
+  <properties/>
+  <testcase name="ambiguousPublishNeedsReadbackAndExplicitAcknowledgementNotMatchingTextHeuristic" classname="lol.omg.pocket.ProfileEditorTest" time="0.004"/>
+  <testcase name="saveDraftThenPublishPreservesConfigurationAndPreventsDoubleTap" classname="lol.omg.pocket.ProfileEditorTest" time="0.002"/>
+  <testcase name="preflightFailureSendsNothingAndRetainsEditableDraft" classname="lol.omg.pocket.ProfileEditorTest" time="0.001"/>
+  <testcase name="demoEditsAreLocalAddressScopedAndReset" classname="lol.omg.pocket.ProfileEditorTest" time="0.002"/>
+  <testcase name="closeGuardsDraftAndSessionLossRejectsLateResult" classname="lol.omg.pocket.ProfileEditorTest" time="0.002"/>
+  <testcase name="conflictPreservesDraftAndNewRemoteChangesRequireAnotherReview" classname="lol.omg.pocket.ProfileEditorTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

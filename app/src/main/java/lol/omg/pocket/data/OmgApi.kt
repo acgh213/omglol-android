@@ -73,6 +73,16 @@ class OmgApi internal constructor(private val baseUrl: HttpUrl) {
         ProfileSource(content, obj.text("type") ?: "profile", obj.text("theme") ?: "", obj.text("css") ?: "",
             obj.text("head") ?: "", obj.text("metadata") ?: "", obj.text("branding") ?: "", obj.text("pfp") ?: "")
     }
+    suspend fun saveProfile(c: Credentials, address: String, content: String, publish: Boolean): ProfileSaved = parse {
+        val body = JsonObject().apply {
+            addProperty("content", content)
+            // The provider documents omitting publish for a draft-only save.
+            if (publish) addProperty("publish", true)
+        }.toString()
+        val response = request(c, arrayOf("address", address, "web"), body).asJsonObject
+        response.required("message")
+        ProfileSaved(publish)
+    }
     private suspend fun get(c: Credentials?, vararg segments: String): JsonElement = request(c, segments)
     private suspend fun request(c: Credentials?, segments: Array<out String>, body: String? = null): JsonElement {
         val url = baseUrl.newBuilder().apply { segments.forEach { addPathSegment(it) } }.build()

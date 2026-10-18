@@ -9,12 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 
-@Composable fun ProfileScreen(scope: AddressScope?, state: ProfileState, refresh: () -> Unit) {
+@Composable fun ProfileScreen(scope: AddressScope?, state: ProfileState, refresh: () -> Unit, edit: () -> Unit) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
             Text("Profile source", style = MaterialTheme.typography.headlineMedium)
             Text(scope?.let { "${it.address}.omg.lol" } ?: "Choose an owned address.")
-            Text("Read-only source viewer · Editing and publishing will come later.", style = MaterialTheme.typography.bodySmall)
+            Text("Page source · Save drafts or publish with the editor.", style = MaterialTheme.typography.bodySmall)
         }
         when {
             scope == null -> item { MessageCard("No address selected.") }
@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
                 if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
                 state.error?.let { item { MessageCard(if (state.source != null) "Showing last loaded source. $it" else it, error = true) } }
                 state.source?.let { source ->
+                    item { Button(onClick = edit, enabled = !state.loading) { Text("Edit page source") } }
                     item { Text("Type: ${source.type} · Theme: ${source.theme.ifEmpty { "default" }}", style = MaterialTheme.typography.labelLarge) }
                     item { SourceBlock("Page content", source.content, expandedInitially = true) }
                     item { SourceBlock("Custom CSS", source.css) }

@@ -28,3 +28,7 @@ Install 0.3 over 0.2. In Try demo, open Statuslog → New status, write text, ro
 For a deliberate real post, select the correct owned address, open New status, check the target and Mastodon choice (off by default), then tap Post. Verify the receipt and history. A timeout/server error can leave an unknown outcome: check latest statuses before explicitly allowing another attempt; no automatic re-submit occurs. Do not interpret a matching text entry as server-side idempotency proof.
 
 Profile displays plain source/configuration without executing HTML; editing/publishing is not implemented. Drafts live only in process memory and clear on discard, session change/sign-out, or process death. Large responses remain bounded; there is no offline database.
+
+## 0.4.0
+
+See [0.4 verification](verification/0.4.0-NOTES.md) and [review](review/V04.md). Adds content-only profile editing with separate draft save and confirmed publishing. 57 JVM tests pass; APK/device test builds and lint pass. Device execution and live writes remain unverified. New debug signing identity requires reinstalling earlier builds.

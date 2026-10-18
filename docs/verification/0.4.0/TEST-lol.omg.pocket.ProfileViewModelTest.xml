@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="lol.omg.pocket.ProfileViewModelTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-18T11:51:53.194Z" hostname="e131887b53c5" time="0.004">
+  <properties/>
+  <testcase name="hiddenTabDefersReadAndRetryRetainsOldSource" classname="lol.omg.pocket.ProfileViewModelTest" time="0.001"/>
+  <testcase name="latePreviousAddressAndLogoutDoNotRestoreSource" classname="lol.omg.pocket.ProfileViewModelTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
