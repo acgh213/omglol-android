@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="lol.omg.pocket.FeatureApiTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-18T11:51:52.792Z" hostname="e131887b53c5" time="0.137">
+  <properties/>
+  <testcase name="profilePreservesRawSourceAndAllowsEmptyContent" classname="lol.omg.pocket.FeatureApiTest" time="0.072"/>
+  <testcase name="postUsesSingleAuthenticatedJsonRequestAndEscapesContent" classname="lol.omg.pocket.FeatureApiTest" time="0.012"/>
+  <testcase name="disconnectAfterPostNeverAutomaticallyResubmits" classname="lol.omg.pocket.FeatureApiTest" time="0.023"/>
+  <testcase name="postRejectsRedirectsMissingReceiptAndServerFailureWithoutRetry" classname="lol.omg.pocket.FeatureApiTest" time="0.018"/>
+  <testcase name="crossPostingRequiresExplicitTrue" classname="lol.omg.pocket.FeatureApiTest" time="0.005"/>
+  <testcase name="immediate503RetryAfterNeverReplaysPost" classname="lol.omg.pocket.FeatureApiTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[Oct 18, 2026 7:51:52 PM okhttp3.mockwebserver.MockWebServer$SocketHandler handle
+WARNING: MockWebServer[40411] connection from /127.0.0.1 didn't make a request
+]]></system-err>
+</testsuite>

@@ -33,3 +33,5 @@ data class ProfileSource(
     val branding: String = "",
     val picture: String = ""
 )
+
+data class ProfileSaved(val published: Boolean)

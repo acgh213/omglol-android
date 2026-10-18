@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="lol.omg.pocket.ComposerViewModelTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-18T11:51:52.608Z" hostname="e131887b53c5" time="0.181">
+  <properties/>
+  <testcase name="sessionSwitchClearsDraftAndLateSuccessCannotRestoreIt" classname="lol.omg.pocket.ComposerViewModelTest" time="0.004"/>
+  <testcase name="blankContentAndDoubleTapNeverDuplicatePosts" classname="lol.omg.pocket.ComposerViewModelTest" time="0.001"/>
+  <testcase name="definiteRejectionKeepsEditableDraftAndCrossPostChoice" classname="lol.omg.pocket.ComposerViewModelTest" time="0.006"/>
+  <testcase name="ambiguousOutcomePreservesDraftAndRequiresHistoryAndAcknowledgement" classname="lol.omg.pocket.ComposerViewModelTest" time="0.002"/>
+  <testcase name="demoPostAppearsInSharedLocalHistoryWithoutCredentials" classname="lol.omg.pocket.ComposerViewModelTest" time="0.165"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

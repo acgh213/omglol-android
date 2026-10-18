@@ -14,6 +14,9 @@ class ProfileViewModelTest {
     @After fun cleanup() { Dispatchers.resetMain() }
     @Test fun latePreviousAddressAndLogoutDoNotRestoreSource() = runTest(dispatcher) {
         val repo = object : FeatureRepository {
+            override suspend fun saveProfile(scope: AddressScope, content: String, publish: Boolean): ProfileSaved = error("Unexpected profile write")
+            override fun resetDemo() {}
+
             override suspend fun createStatus(scope: AddressScope, draft: StatusDraft) = error("No writes")
             override suspend fun latest(scope: AddressScope) = emptyList<StatusEntry>()
             override suspend fun profile(scope: AddressScope): ProfileSource {
@@ -29,6 +32,9 @@ class ProfileViewModelTest {
     @Test fun hiddenTabDefersReadAndRetryRetainsOldSource() = runTest(dispatcher) {
         var fail = false; var calls = 0
         val repo = object : FeatureRepository {
+            override suspend fun saveProfile(scope: AddressScope, content: String, publish: Boolean): ProfileSaved = error("Unexpected profile write")
+            override fun resetDemo() {}
+
             override suspend fun createStatus(scope: AddressScope, draft: StatusDraft) = error("No writes")
             override suspend fun latest(scope: AddressScope) = emptyList<StatusEntry>()
             override suspend fun profile(scope: AddressScope): ProfileSource {

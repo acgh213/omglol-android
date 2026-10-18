@@ -25,7 +25,7 @@ class PostingUiTest {
         compose.onNodeWithText("A local demo post").assertExists()
         compose.onNodeWithText("Profile").performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Page content · Hide").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Read-only source viewer · Editing and publishing will come later.").assertExists()
+        compose.onNodeWithText("Page source · Save drafts or publish with the editor.").assertExists()
     }
     @Test fun closingDraftRequiresDeliberateDiscard() {
         demo(); compose.onNodeWithText("Statuslog").performClick()
@@ -38,5 +38,21 @@ class PostingUiTest {
         compose.onNodeWithText("Close").performScrollTo().performClick()
         compose.onNodeWithText("Discard draft").performClick()
         compose.onNodeWithText("Status text").assertDoesNotExist()
+    }
+    @Test fun profileDraftSurvivesRotationAndPublishRequiresConfirmation() {
+        demo(); compose.onNodeWithText("Profile").performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Edit page source").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Edit page source").performScrollTo().performClick()
+        compose.onNodeWithText("Page source").performTextReplacement("My demo page")
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithText("My demo page").assertExists()
+        compose.onNodeWithText("Save draft").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Saved locally in demo without publishing.").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Publish page").performScrollTo().performClick()
+        compose.onNodeWithText("Confirm action").assertIsDisplayed()
+        compose.onNodeWithText("Cancel").performClick()
+        compose.onNodeWithText("Publish page").performScrollTo().performClick()
+        compose.onNodeWithText("Confirm").performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Published locally in demo. Nothing changed online.").fetchSemanticsNodes().isNotEmpty() }
     }
 }

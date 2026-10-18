@@ -81,7 +81,7 @@ private val Lilac = Color(0xFF6853A0)
                             Text("Independent omg.lol client", style = MaterialTheme.typography.labelSmall)
                         }
                         destination == "Statuslog" -> StatusScreen(state.scope, status, statusModel::refresh, statusModel::retry, composerModel::open)
-                        destination == "Profile" -> ProfileScreen(state.scope, profile, profileModel::refresh)
+                        destination == "Profile" -> ProfileScreen(state.scope, profile, profileModel::refresh, profileModel::openEditor)
                         else -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
                             verticalArrangement = Arrangement.spacedBy(20.dp)) {
                             AccountScreen(state, model::refresh, model::selectAddress, model::signOut)
@@ -91,6 +91,7 @@ private val Lilac = Color(0xFF6853A0)
                 }
             }
         }
+        if (profile.editorOpen && profile.scope == state.scope) ProfileEditorDialog(profile, profileModel)
         if (composer.open && state.scope != null && composer.scope == state.scope) ComposerDialog(composer, composerModel)
     }
 }

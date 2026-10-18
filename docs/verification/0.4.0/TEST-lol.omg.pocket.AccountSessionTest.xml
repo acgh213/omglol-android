@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="lol.omg.pocket.AccountSessionTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-18T11:51:52.409Z" hostname="e131887b53c5" time="0.13">
+  <properties/>
+  <testcase name="capabilityRejectsWrongGenerationUnownedAndDemo" classname="lol.omg.pocket.AccountSessionTest" time="0.122"/>
+  <testcase name="logoutRejectsLateResult" classname="lol.omg.pocket.AccountSessionTest" time="0.004"/>
+  <testcase name="oldAuthRejectionCannotExpireNewSession" classname="lol.omg.pocket.AccountSessionTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
