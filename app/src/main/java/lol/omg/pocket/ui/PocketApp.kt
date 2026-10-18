@@ -1,12 +1,12 @@
 package lol.omg.pocket.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -15,35 +15,67 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 private val Lilac = Color(0xFF6853A0)
-@Composable fun PocketApp(model: AccountViewModel) {
+@Composable fun PocketApp(
+    model: AccountViewModel,
+    statusModel: StatusViewModel = viewModel(),
+    onScreenshotProtection: (Boolean) -> Unit = {}
+) {
     val state by model.state.collectAsStateWithLifecycle()
+    val status by statusModel.state.collectAsStateWithLifecycle()
+    var destination by rememberSaveable { mutableStateOf("Account") }
+    val protectCredentials = state.account == null
+    DisposableEffect(protectCredentials, onScreenshotProtection) {
+        onScreenshotProtection(protectCredentials)
+        onDispose { onScreenshotProtection(true) }
+    }
+    LaunchedEffect(state.scope) { statusModel.setScope(state.scope) }
+    LaunchedEffect(state.account == null) { if (state.account == null) destination = "Account" }
     MaterialTheme(colorScheme = lightColorScheme(primary = Lilac, secondary = Color(0xFF4E7068),
         background = Color(0xFFF9F7FC), surface = Color(0xFFF9F7FC))) {
-        Scaffold { insets ->
-            Column(Modifier.fillMaxSize().padding(insets).imePadding().verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Scaffold(bottomBar = {
+            if (state.account != null) NavigationBar {
+                NavigationBarItem(selected = destination == "Account", onClick = { destination = "Account" },
+                    icon = { Text("⌂") }, label = { Text("Account") })
+                NavigationBarItem(selected = destination == "Statuslog", onClick = { destination = "Statuslog" },
+                    icon = { Text("☕") }, label = { Text("Statuslog") })
+            }
+        }) { insets ->
+            Column(Modifier.fillMaxSize().padding(insets).imePadding()) {
+                Row(Modifier.padding(horizontal = 24.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Surface(shape = MaterialTheme.shapes.large, color = Lilac) {
-                        Text(":)", Modifier.padding(14.dp), color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        Text(":)", Modifier.padding(12.dp), color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     }
-                    Column {
-                        Text("omg.lol pocket", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                        Text("A little home for your addresses.", style = MaterialTheme.typography.bodyMedium)
+                    Text("omg.lol pocket", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                }
+                if (state.account != null) {
+                    Column(Modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (state.demo) Text("Demo mode · Sample data", style = MaterialTheme.typography.labelMedium)
+                        AddressSelector(state.addresses, state.selected, !state.busy, model::selectAddress)
                     }
                 }
-                if (state.restoring) {
-                    LinearProgressIndicator(Modifier.fillMaxWidth())
-                    Text("Checking saved sign-in…")
-                } else if (state.account == null) {
-                    SignIn(state, model::signIn, model::demo, model::refresh)
-                    if (state.busy) TextButton(onClick = model::signOut) { Text("Cancel") }
-                } else {
-                    AccountScreen(state, model::refresh, model::selectAddress, model::signOut)
+                Box(Modifier.weight(1f).fillMaxWidth()) {
+                    when {
+                        state.restoring -> Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            LinearProgressIndicator(Modifier.fillMaxWidth()); Text("Checking saved sign-in…")
+                        }
+                        state.account == null -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+                            verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                            SignIn(state, model::signIn, model::demo, model::refresh)
+                            if (state.busy) TextButton(onClick = model::signOut) { Text("Cancel") }
+                            Text("Independent omg.lol client · Read-only", style = MaterialTheme.typography.labelSmall)
+                        }
+                        destination == "Statuslog" -> StatusScreen(state.scope, status, statusModel::refresh, statusModel::retry)
+                        else -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+                            verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                            AccountScreen(state, model::refresh, model::selectAddress, model::signOut)
+                            Text("Independent omg.lol client · Read-only", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
                 }
-                Text("Independent omg.lol client · Read-only preview", style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -78,7 +110,6 @@ private val Lilac = Color(0xFF6853A0)
 }
 
 @Composable private fun AccountScreen(state: AccountUiState, refresh: () -> Unit, select: (String) -> Unit, signOut: () -> Unit) {
-    if (state.demo) MessageCard("Demo mode · Sample data, no account connected.")
     state.notice?.let { MessageCard(it) }
     state.error?.let { MessageCard(it, error = true) }
     val account = state.account ?: return
@@ -95,18 +126,7 @@ private val Lilac = Color(0xFF6853A0)
         TextButton(onClick = signOut) { Text(if (state.demo) "Exit demo" else "Sign out") }
     }
     if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-    Text("Your addresses", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
     if (state.addresses.isEmpty()) MessageCard("No addresses belong to this account yet.")
-    state.addresses.forEach { address ->
-        OutlinedCard(onClick = { select(address.name) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.outlinedCardColors(containerColor = if (address.name == state.selected) Color(0xFFEAF2EE) else MaterialTheme.colorScheme.surface)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("${address.name}.omg.lol", fontWeight = FontWeight.SemiBold)
-                Text(address.expiration, style = MaterialTheme.typography.bodySmall)
-                if (address.name == state.selected) Text("Selected", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
-            }
-        }
-    }
     if (state.selected != null) {
         Text("Address details", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         if (state.detailLoading) { LinearProgressIndicator(Modifier.fillMaxWidth()); Text("Loading ${state.selected}…") }
@@ -129,7 +149,7 @@ private val Lilac = Color(0xFF6853A0)
 @Composable private fun DetailRow(label: String, value: String) {
     Column { Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant); Text(value) }
 }
-@Composable private fun MessageCard(message: String, error: Boolean = false) {
+@Composable internal fun MessageCard(message: String, error: Boolean = false) {
     Surface(color = if (error) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondaryContainer,
         shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth()) {
         Text(message, Modifier.padding(16.dp), color = if (error) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer)

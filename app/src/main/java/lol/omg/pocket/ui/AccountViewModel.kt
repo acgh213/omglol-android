@@ -24,8 +24,13 @@ data class AccountUiState(
     val error: String? = null,
     val detailError: String? = null,
     val notice: String? = null,
-    val canRetry: Boolean = false
-)
+    val canRetry: Boolean = false,
+    val sessionGeneration: Int = 0
+) {
+    val scope: AddressScope?
+        get() = selected?.takeIf { name -> account != null && addresses.any { it.name == name } }
+            ?.let { AddressScope(sessionGeneration, it, demo) }
+}
 class AccountViewModel(
     private val live: AccountRepository,
     private val vault: CredentialStore,
@@ -98,7 +103,7 @@ class AccountViewModel(
                 val selection = state.value.selected?.takeIf { name -> result.addresses.any { it.name == name } }
                     ?: result.addresses.firstOrNull()?.name
                 mutable.update { it.copy(busy = false, account = result.account, addresses = result.addresses,
-                    selected = selection, detail = null, detailError = null, notice = notice) }
+                    selected = selection, detail = null, detailError = null, notice = notice, sessionGeneration = version) }
                 selection?.let { selectAddress(it) }
             } catch (e: CancellationException) { throw e }
             catch (e: Exception) {

@@ -119,4 +119,18 @@ class AccountViewModelTest {
         assertNull(vm.state.value.error)
     }
 
+    @Test fun addressScopeSurvivesRefreshAndChangesOnNewSession() = runTest(dispatcher) {
+        val repo = Repo(); val vm = AccountViewModel(repo, Store(), dispatcher)
+        advanceUntilIdle(); assertNull(vm.state.value.scope)
+        vm.signIn("c@example.com", "k"); advanceUntilIdle()
+        vm.selectAddress("two"); advanceUntilIdle()
+        val scope = vm.state.value.scope!!
+        assertEquals("two", scope.address)
+        vm.refresh(); advanceUntilIdle(); assertEquals(scope, vm.state.value.scope)
+        vm.signOut(); advanceUntilIdle(); assertNull(vm.state.value.scope)
+        vm.signIn("c@example.com", "k"); advanceUntilIdle()
+        assertNotEquals(scope.sessionGeneration, vm.state.value.scope!!.sessionGeneration)
+        repo.empty = true; vm.refresh(); advanceUntilIdle(); assertNull(vm.state.value.scope)
+    }
+
 }

@@ -12,6 +12,7 @@ import lol.omg.pocket.data.LiveAccountRepository
 import lol.omg.pocket.security.KeystoreCredentialStore
 import lol.omg.pocket.ui.AccountViewModel
 import lol.omg.pocket.ui.PocketApp
+import lol.omg.pocket.ui.StatusViewModel
 
 class MainActivity : ComponentActivity() {
     private val model: AccountViewModel by viewModels {
@@ -21,10 +22,15 @@ class MainActivity : ComponentActivity() {
                 AccountViewModel(LiveAccountRepository(), KeystoreCredentialStore(applicationContext)) as T
         }
     }
+    private val statuses: StatusViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         enableEdgeToEdge()
-        setContent { PocketApp(model) }
+        setContent { PocketApp(model, statuses, ::protectScreenshots) }
+    }
+    private fun protectScreenshots(protect: Boolean) {
+        if (protect) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
     }
 }

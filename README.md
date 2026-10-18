@@ -1,6 +1,6 @@
 # omg.lol pocket
 
-A native Kotlin / Jetpack Compose Android client, initially focused on **read-only account access**. This is an independent, unofficial client.
+A native Kotlin / Jetpack Compose Android client, with **read-only account and Statuslog access**. This is an independent, unofficial client.
 
 ## Open and run
 
@@ -13,6 +13,8 @@ CLI: `./gradlew testDebugUnitTest assembleDebug lintDebug`. Device checks: `./gr
 
 ## Included
 
+- Account and Statuslog destinations with one shared owned-address picker.
+- Public Statuslog history with emoji, plain-text content, local dates, refresh/retry and bounded response handling.
 - Account name, email and creation age; owned address list and selection; authenticated address registration, expiry and verification details.
 - Loading, empty, retry, refresh, authentication-expired, rate-limit, service and offline states.
 - Optional encrypted sign-in persistence and sign-out. Nothing is persisted by default.
@@ -29,7 +31,7 @@ The official OAuth exchange example includes `client_secret`; the inspected API 
 
 The UI is read-only, but **the API key itself may have broader permissions**. It is sent only in the Authorization header to `https://api.omg.lol`, never in URLs. HTTP redirects are disabled. There is no analytics, network logging, disk response cache, or background work. TLS uses platform trust; no custom permissive trust manager.
 
-**Remember on this device** encrypts email and key together with AES-256-GCM and a non-exportable Android Keystore key. Ciphertext lives in private preferences, excluded from cloud backup/device transfer. Corruption or missing Keystore material returns to sign-in. Sign-out removes local ciphertext and the Keystore alias; revoke the API key at omg.lol if needed. Device compromise is outside Keystore's protection boundary. The app obscures screenshots/recents via FLAG_SECURE. Credentials remain necessary in process memory while signed in; they are never in saved-instance state.
+**Remember on this device** encrypts email and key together with AES-256-GCM and a non-exportable Android Keystore key. Ciphertext lives in private preferences, excluded from cloud backup/device transfer. Corruption or missing Keystore material returns to sign-in. Sign-out removes local ciphertext and the Keystore alias; revoke the API key at omg.lol if needed. Device compromise is outside Keystore's protection boundary. The app protects screenshots/recents on credential entry and restoration via FLAG_SECURE. Signed-in and demo screens allow screenshots. Credentials remain necessary in process memory while signed in; they are never in saved-instance state.
 
 ## Structure and extension
 
@@ -38,8 +40,15 @@ The UI is read-only, but **the API key itself may have broader permissions**. It
 - `data/AccountRepository.kt`: account feature interface and live/demo implementations.
 - `security/CredentialStore.kt`: injected storage interface and Android Keystore implementation.
 - `ui/AccountViewModel.kt`: session lifecycle, state and race/cancellation protection.
-- `ui/PocketApp.kt`: stateless Compose flows backed by lifecycle-aware state collection.
+- `ui/PocketApp.kt`: Account/Statuslog navigation and lifecycle-aware state collection.
+- `ui/StatusViewModel.kt`: address/session/request-scoped Statuslog state, separate from credentials.
+- `data/StatusRepository.kt`: public live reads and isolated demo statuses. Public requests do not carry the account API key.
+- `ui/StatusScreen.kt`: bounded lazy history list; source content is displayed as plain text.
 
 Add profile, statuslog and Pastebin as separate feature repositories and ViewModels that share a session/transport boundary. Add explicit mutation operations only when implementing those features; the current API exposes GET operations only. Do not attach bearer credentials to public/external links or make the API base URL user-configurable. Add feature navigation when a second real feature exists.
 
 See `docs/DESIGN.md`, `docs/PLAN.md` and `docs/VERIFICATION.md` for scope and verification status. Cassie has confirmed successful live sign-in and loading of both owned addresses on her Android phone. Automated device tests remain unexecuted; see the verification notes.
+
+## Roadmap
+
+See [the incremental feature plan](docs/superpowers/plans/2026-10-17-next-features.md). After 0.2 browsing: status posting, profile editing, Pastebin, /now page management and weblog management. These later services are planned, not implemented.

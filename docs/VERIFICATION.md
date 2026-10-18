@@ -1,45 +1,33 @@
-# Verification — 2026-10-17
+# Verification — 0.2.0
+
+Build completed 2026-10-17 (America/New_York). Baseline 0.1.0 was previously validated on Cassie's phone; this update still needs her device acceptance.
 
 ## Executed
 
-JDK 17, Gradle 8.13, Android SDK 35 / Build Tools 35.0.0.
+`./gradlew testDebugUnitTest assembleDebug lintDebug assembleDebugAndroidTest`
 
-Equivalent standard project command:
+- BUILD SUCCESSFUL, 76 tasks (19 executed, 57 up-to-date) on final code.
+- 31 JVM tests, zero failures/errors: original account contracts and lifecycle, public Statuslog HTTP contracts, timestamp ordering/invalid data, response limits, address/session scopes, demo isolation, cancellation and stale response rejection.
+- Debug APK and device-test APK compiled and assembled.
+- Lint: zero errors, seven warnings (six available-dependency-update notices, one SharedPreferences KTX style suggestion). The launcher icon warning from 0.1 is resolved. Dependency upgrades are deferred to avoid changing the verified toolchain in this feature release; synchronous commit remains intentional.
+- Independent source review found an invalid timestamp-shape bug; the ordering regression failed with created:{} / created:[1,2], then passed after those values became undated entries. No remaining important source-review findings.
+- apksigner verifies the final APK. Its SHA-256 signing certificate matches the delivered 0.1.0 APK: `d943bdb0aeab77117124dfe74d4d2807e5c337a2c8d8c7eb68b4813f8e8df82e`.
+- Package remains lol.omg.pocket; versionCode 2, versionName 0.2.0. This is a debug build. The signing key is not committed to the repository.
 
-```sh
-./gradlew testDebugUnitTest assembleDebug lintDebug assembleDebugAndroidTest
-```
+Raw test/lint evidence: `docs/verification/0.2.0/`. Historical notes: `docs/verification/0.1.0-NOTES.md`.
 
-Result: **BUILD SUCCESSFUL**, 76 tasks, 47 executed / 29 up-to-date.
+## Not executed
 
-- JVM suite: **17 tests, 0 failures, 0 errors** (9 real-HTTP MockWebServer contract tests, 8 ViewModel tests).
-- Debug APK: assembled successfully, minimum Android 8.0 / API 26.
-- Device test APK: compiled and assembled successfully. Includes demo navigation, encrypted vault round-trip / plaintext exclusion / clearing, and initial-load retry UI checks.
-- Android lint: **0 errors, 6 warnings**.
-- Independent source review: two findings addressed (expiry/sign-out race and missing initial-load retry). The race regression failed before the correction and passed after it.
+`adb devices` returned no attached devices. Automated device tests were compiled but NOT run. No screenshot or live Statuslog acceptance was performed by this environment. No API credentials were supplied to the builder.
 
-The source archive includes XML unit-test evidence under `docs/verification/`.
+Device tests cover demo navigation and address selection, retry UI, screenshot flags before/after sign-in and recreation, encrypted vault round-trip, empty/error Statuslog states and a 100-entry long-text list at font scale 2. Run `./gradlew connectedDebugAndroidTest` on a test device.
 
-## Remaining validation
+## Phone acceptance
 
-No live account credentials were supplied and no Android device or emulator was attached (`adb devices` returned an empty list). **Device tests have not been executed**. Neither live API acceptance nor visual layout on a device has been verified. Keystore behavior is covered by compiled device tests, not a completed device run.
+Install 0.2 over 0.1 without uninstalling. Check remembered sign-in if previously enabled, otherwise sign in again. Switch both owned addresses, open Statuslog, refresh, try a screenshot, switch back to Account and verify the shared address stays selected. Try a temporary offline refresh and retry. Sign out and confirm credential-screen protection returns. If an address has no statuses, its empty state is expected.
 
-Run on a disposable emulator or test device:
+## Limits and deferred work
 
-```sh
-./gradlew connectedDebugAndroidTest
-```
+Read-only. No posting, source/profile editing, Pastebin, weblog or /now management yet. Statuslog reads are public and omit the API key. Source content displays as plain text; no HTML execution or rich Markdown. Full history responses are capped at 1 MiB; oversized histories show an explanatory error without silent truncation. There is no undocumented pagination workaround or offline database.
 
-Then check a real account: memory-only sign-in, owned-address selection, refresh, airplane-mode failure/retry, remembered sign-in after force-stop, sign-out, and rejected/revoked-key behavior. Demo mode is available without credentials.
-
-## Deferred minor findings
-
-- Four dependency-update warnings (Compose BOM appears for main and device tests; ViewModel and lifecycle runtime each have a newer version). Versions are deliberately pinned to the toolchain verified here; these warnings are not vulnerability findings.
-- No custom launcher icon yet; Android uses its generic application icon.
-- Lint suggests the SharedPreferences KTX helper; explicit synchronous `commit()` remains intentional so storage failure can be reported.
-
-Build notes: AGP reports deprecated Gradle features for a future Gradle 9 migration. One native Compose library was packaged without stripping debug symbols; this does not prevent the debug APK from building. No release signing or publishing was performed.
-
-## User acceptance update — 2026-10-17
-
-Cassie subsequently installed the APK on her Android phone and reported successful email/API-key sign-in and loading of both owned addresses. This establishes user-reported live authentication and account/address loading. The automated on-device tests and broader acceptance checklist above have not been run by the build environment. Screenshot blocking was also observed, matching the current FLAG_SECURE setting.
+Same-certificate validation establishes update signing compatibility, not a completed on-device upgrade test. Future builds must retain a compatible signing identity to update this installation.
