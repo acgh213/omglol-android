@@ -6,6 +6,8 @@ import com.google.gson.JsonParser
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
@@ -15,7 +17,7 @@ import kotlin.coroutines.resumeWithException
 class OmgApi internal constructor(private val baseUrl: HttpUrl) {
     constructor() : this("https://api.omg.lol/".toHttpUrl())
     private val client = OkHttpClient.Builder()
-        .followRedirects(false).followSslRedirects(false)
+        .followRedirects(false).followSslRedirects(false).retryOnConnectionFailure(false)
         .connectTimeout(15, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS)
         .callTimeout(30, TimeUnit.SECONDS).build()
 
@@ -55,10 +57,29 @@ class OmgApi internal constructor(private val baseUrl: HttpUrl) {
             StatusEntry(obj.required("id"), owner, obj.text("emoji") ?: "", content, epoch)
         }.sortedWith(compareByDescending<StatusEntry> { it.createdEpochSeconds })
     }
-    private suspend fun get(c: Credentials?, vararg segments: String): JsonElement {
+    suspend fun createStatus(c: Credentials, address: String, draft: StatusDraft): PostedStatus = parse {
+        val body = JsonObject().apply {
+            addProperty("emoji", draft.emoji)
+            addProperty("content", draft.content)
+            addProperty("skip_mastodon_post", !draft.crossPost)
+        }.toString()
+        val response = request(c, arrayOf("address", address, "statuses", ""), body).asJsonObject
+        PostedStatus(response.required("id"), address)
+    }
+    suspend fun profile(c: Credentials, address: String): ProfileSource = parse {
+        val obj = get(c, "address", address, "web").asJsonObject
+        val content = obj.get("content")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString
+            ?: throw ApiFailure(FailureKind.FORMAT)
+        ProfileSource(content, obj.text("type") ?: "profile", obj.text("theme") ?: "", obj.text("css") ?: "",
+            obj.text("head") ?: "", obj.text("metadata") ?: "", obj.text("branding") ?: "", obj.text("pfp") ?: "")
+    }
+    private suspend fun get(c: Credentials?, vararg segments: String): JsonElement = request(c, segments)
+    private suspend fun request(c: Credentials?, segments: Array<out String>, body: String? = null): JsonElement {
         val url = baseUrl.newBuilder().apply { segments.forEach { addPathSegment(it) } }.build()
         val request = Request.Builder().url(url).apply { if (c != null) header("Authorization", "Bearer ${c.apiKey}") }
-            .header("Accept", "application/json").get().build()
+            .header("Accept", "application/json").apply {
+                if (body == null) get() else post(OneShotJsonBody(body))
+            }.build()
         return suspendCancellableCoroutine { continuation ->
             val call = client.newCall(request)
             continuation.invokeOnCancellation { call.cancel() }
@@ -96,6 +117,7 @@ class OmgApi internal constructor(private val baseUrl: HttpUrl) {
     private fun failure(status: Int) = ApiFailure(when (status) {
         401, 403 -> FailureKind.AUTH
         429 -> FailureKind.RATE_LIMIT
+        400, 404, 409, 413, 415, 422 -> FailureKind.REJECTED
         else -> FailureKind.SERVER
     })
     private fun JsonObject.text(key: String): String? = get(key)?.takeUnless { it.isJsonNull }?.asString
@@ -107,4 +129,13 @@ class OmgApi internal constructor(private val baseUrl: HttpUrl) {
         obj.get("will_expire")?.asBoolean == false -> "Does not expire"
         else -> obj.text("relative_time")?.let { "Expires in $it" } ?: obj.text("message") ?: "Unknown"
     }
+}
+
+/** Also prevents HTTP follow-ups (e.g. 503 Retry-After: 0) from replaying a status. */
+private class OneShotJsonBody(value: String) : RequestBody() {
+    private val delegate = value.toRequestBody("application/json; charset=utf-8".toMediaType())
+    override fun contentType() = delegate.contentType()
+    override fun contentLength() = delegate.contentLength()
+    override fun writeTo(sink: okio.BufferedSink) = delegate.writeTo(sink)
+    override fun isOneShot() = true
 }

@@ -1,33 +1,30 @@
-# Verification — 0.2.0
+# Verification — 0.3.0
 
-Build completed 2026-10-17 (America/New_York). Baseline 0.1.0 was previously validated on Cassie's phone; this update still needs her device acceptance.
+Final command: `./gradlew clean testDebugUnitTest assembleDebug lintDebug assembleDebugAndroidTest`.
 
-## Executed
+Result: **BUILD SUCCESSFUL**, 77/77 tasks executed from a clean build.
 
-`./gradlew testDebugUnitTest assembleDebug lintDebug assembleDebugAndroidTest`
+- **48 JVM tests, zero failures/errors.** Includes 31 original account/Statuslog cases, authenticated feature rejection, JSON POST/body/auth contracts, one-shot status requests, session capabilities, draft/uncertain outcome state, demo posting and profile loading/races.
+- Debug APK and device-test APK built successfully.
+- Lint: **zero errors, 7 warnings**. Remaining warnings are dependency update notices and the existing SharedPreferences KTX suggestion; details in the XML report. Dependency refresh is deferred; synchronous commit reports storage failure.
+- Independent source review identified that OkHttp can follow a 503 Retry-After:0 response despite disabling connection retries. A regression failed on a replayed POST; one-shot request bodies fixed it, and the full suite then passed. No remaining important review findings.
+- The final APK signature verifies and its SHA-256 certificate matches the delivered 0.2 APK: d943bdb0aeab77117124dfe74d4d2807e5c337a2c8d8c7eb68b4813f8e8df82e.
+- Package lol.omg.pocket; versionCode 3, versionName 0.3.0. Debug signing key is not committed.
 
-- BUILD SUCCESSFUL, 76 tasks (19 executed, 57 up-to-date) on final code.
-- 31 JVM tests, zero failures/errors: original account contracts and lifecycle, public Statuslog HTTP contracts, timestamp ordering/invalid data, response limits, address/session scopes, demo isolation, cancellation and stale response rejection.
-- Debug APK and device-test APK compiled and assembled.
-- Lint: zero errors, seven warnings (six available-dependency-update notices, one SharedPreferences KTX style suggestion). The launcher icon warning from 0.1 is resolved. Dependency upgrades are deferred to avoid changing the verified toolchain in this feature release; synchronous commit remains intentional.
-- Independent source review found an invalid timestamp-shape bug; the ordering regression failed with created:{} / created:[1,2], then passed after those values became undated entries. No remaining important source-review findings.
-- apksigner verifies the final APK. Its SHA-256 signing certificate matches the delivered 0.1.0 APK: `d943bdb0aeab77117124dfe74d4d2807e5c337a2c8d8c7eb68b4813f8e8df82e`.
-- Package remains lol.omg.pocket; versionCode 2, versionName 0.2.0. This is a debug build. The signing key is not committed to the repository.
+Evidence: `docs/verification/0.3.0/`. Previous 0.2 notes and user acceptance: `docs/verification/0.2.0-NOTES.md`.
 
-Raw test/lint evidence: `docs/verification/0.2.0/`. Historical notes: `docs/verification/0.1.0-NOTES.md`.
+## Runtime limits
 
-## Not executed
+No Android device/emulator was attached (`adb devices` empty). Device tests are **compiled but unexecuted**. They include demo posting/receipt/history, draft discard and recreation, profile source viewing, navigation, screenshot policy and vault checks. Run `./gradlew connectedDebugAndroidTest` on a test device.
 
-`adb devices` returned no attached devices. Automated device tests were compiled but NOT run. No screenshot or live Statuslog acceptance was performed by this environment. No API credentials were supplied to the builder.
+No real API credentials or live writes were used during development. HTTP tests use MockWebServer; demo posts are local. Live status creation, configured Mastodon cross-posting, profile retrieval and on-device 0.3 upgrade still need user acceptance. Earlier 0.2 account/history/screenshots were confirmed by Cassie on her phone.
 
-Device tests cover demo navigation and address selection, retry UI, screenshot flags before/after sign-in and recreation, encrypted vault round-trip, empty/error Statuslog states and a 100-entry long-text list at font scale 2. Run `./gradlew connectedDebugAndroidTest` on a test device.
+An initial incremental Kotlin compile reported duplicate top-level symbols despite only one declaration per source file. A clean compile removed the stale output; final verification was a complete clean build. No cache workaround is shipped.
 
 ## Phone acceptance
 
-Install 0.2 over 0.1 without uninstalling. Check remembered sign-in if previously enabled, otherwise sign in again. Switch both owned addresses, open Statuslog, refresh, try a screenshot, switch back to Account and verify the shared address stays selected. Try a temporary offline refresh and retry. Sign out and confirm credential-screen protection returns. If an address has no statuses, its empty state is expected.
+Install 0.3 over 0.2. In Try demo, open Statuslog → New status, write text, rotate and post locally; verify the receipt/history, switch addresses, and inspect Profile. Check closing an unfinished draft asks before discarding. Demo posts reset when leaving the demo session.
 
-## Limits and deferred work
+For a deliberate real post, select the correct owned address, open New status, check the target and Mastodon choice (off by default), then tap Post. Verify the receipt and history. A timeout/server error can leave an unknown outcome: check latest statuses before explicitly allowing another attempt; no automatic re-submit occurs. Do not interpret a matching text entry as server-side idempotency proof.
 
-Read-only. No posting, source/profile editing, Pastebin, weblog or /now management yet. Statuslog reads are public and omit the API key. Source content displays as plain text; no HTML execution or rich Markdown. Full history responses are capped at 1 MiB; oversized histories show an explanatory error without silent truncation. There is no undocumented pagination workaround or offline database.
-
-Same-certificate validation establishes update signing compatibility, not a completed on-device upgrade test. Future builds must retain a compatible signing identity to update this installation.
+Profile displays plain source/configuration without executing HTML; editing/publishing is not implemented. Drafts live only in process memory and clear on discard, session change/sign-out, or process death. Large responses remain bounded; there is no offline database.

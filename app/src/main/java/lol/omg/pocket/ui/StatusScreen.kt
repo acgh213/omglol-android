@@ -22,7 +22,7 @@ internal fun formatStatusTime(epoch: Long?): String = epoch?.let {
     }.getOrNull()
 } ?: "Date unavailable"
 
-@Composable fun StatusScreen(scope: AddressScope?, state: StatusUiState, refresh: () -> Unit, retry: () -> Unit) {
+@Composable fun StatusScreen(scope: AddressScope?, state: StatusUiState, refresh: () -> Unit, retry: () -> Unit, compose: (() -> Unit)? = null) {
     LazyColumn(Modifier.fillMaxSize().testTag("status-list"), contentPadding = PaddingValues(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
@@ -30,6 +30,7 @@ internal fun formatStatusTime(epoch: Long?): String = epoch?.let {
             Text(scope?.let { "From ${it.address}.status.lol" } ?: "Choose an owned address to browse its Statuslog.",
                 style = MaterialTheme.typography.bodyMedium)
         }
+        if (scope != null && compose != null) item { Button(onClick = compose) { Text("New status") } }
         when {
             scope == null -> item { MessageCard("No address selected. Your Statuslog will appear here when you own an address.") }
             state.scope != scope -> item { LinearProgressIndicator(Modifier.fillMaxWidth()); Text("Loading statuses…") }
