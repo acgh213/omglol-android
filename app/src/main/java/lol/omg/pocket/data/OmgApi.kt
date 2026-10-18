@@ -36,9 +36,28 @@ class OmgApi internal constructor(private val baseUrl: HttpUrl) {
         AddressDetail(returnedName, obj.objectOrNull("registration")?.text("relative_time") ?: "Unknown",
             expiration(obj.objectOrNull("expiration")), obj.objectOrNull("verification")?.get("verified")?.takeUnless { it.isJsonNull }?.asBoolean)
     }
-    private suspend fun get(c: Credentials, vararg segments: String): JsonElement {
+    suspend fun statuses(address: String): List<StatusEntry> = parse {
+        val response = get(null, "address", address, "statuses", "").asJsonObject
+        val statuses = response.get("statuses")?.takeIf { it.isJsonArray }?.asJsonArray
+            ?: throw ApiFailure(FailureKind.FORMAT)
+        statuses.map { value ->
+            val obj = value.asJsonObject
+            val owner = obj.required("address")
+            if (owner != address) throw ApiFailure(FailureKind.FORMAT)
+            val content = obj.get("content")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString
+                ?: throw ApiFailure(FailureKind.FORMAT)
+            val created = obj.get("created")?.takeIf {
+                it.isJsonPrimitive && (it.asJsonPrimitive.isString || it.asJsonPrimitive.isNumber)
+            }?.asString
+            val epoch = created?.toLongOrNull()?.takeIf { seconds ->
+                runCatching { java.time.Instant.ofEpochSecond(seconds).atZone(java.time.ZoneOffset.UTC) }.isSuccess
+            }
+            StatusEntry(obj.required("id"), owner, obj.text("emoji") ?: "", content, epoch)
+        }.sortedWith(compareByDescending<StatusEntry> { it.createdEpochSeconds })
+    }
+    private suspend fun get(c: Credentials?, vararg segments: String): JsonElement {
         val url = baseUrl.newBuilder().apply { segments.forEach { addPathSegment(it) } }.build()
-        val request = Request.Builder().url(url).header("Authorization", "Bearer ${c.apiKey}")
+        val request = Request.Builder().url(url).apply { if (c != null) header("Authorization", "Bearer ${c.apiKey}") }
             .header("Accept", "application/json").get().build()
         return suspendCancellableCoroutine { continuation ->
             val call = client.newCall(request)
@@ -54,7 +73,7 @@ class OmgApi internal constructor(private val baseUrl: HttpUrl) {
                             // Bound memory use; responses are account metadata, not arbitrary files.
                             val source = it.body?.source() ?: throw ApiFailure(FailureKind.FORMAT)
                             source.request(1_048_577)
-                            if (source.buffer.size > 1_048_576) throw ApiFailure(FailureKind.FORMAT)
+                            if (source.buffer.size > 1_048_576) throw ApiFailure(if (c == null) FailureKind.TOO_LARGE else FailureKind.FORMAT)
                             val root = JsonParser.parseString(source.readUtf8()).asJsonObject
                             val meta = root.getAsJsonObject("request") ?: throw ApiFailure(FailureKind.FORMAT)
                             if (meta.get("success")?.asBoolean != true) throw failure(meta.get("status_code")?.asInt ?: 500)

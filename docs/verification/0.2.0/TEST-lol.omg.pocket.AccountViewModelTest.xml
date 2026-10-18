@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="lol.omg.pocket.AccountViewModelTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-10-18T02:40:29.869Z" hostname="5a0dd75f8ebf" time="0.084">
+  <properties/>
+  <testcase name="expiredSessionCannotOverwriteSignOutWhileStorageIsPending" classname="lol.omg.pocket.AccountViewModelTest" time="0.026"/>
+  <testcase name="vaultFailureIsVisibleAndLeavesSessionInMemoryOnly" classname="lol.omg.pocket.AccountViewModelTest" time="0.01"/>
+  <testcase name="latestSelectionWinsAndLogoutCancelsWork" classname="lol.omg.pocket.AccountViewModelTest" time="0.008"/>
+  <testcase name="demoNeverReadsOrWritesLiveCredentials" classname="lol.omg.pocket.AccountViewModelTest" time="0.003"/>
+  <testcase name="authExpiryClearsSession" classname="lol.omg.pocket.AccountViewModelTest" time="0.017"/>
+  <testcase name="validatesBeforeNetworkAndDoesNotSaveByDefault" classname="lol.omg.pocket.AccountViewModelTest" time="0.002"/>
+  <testcase name="addressScopeSurvivesRefreshAndChangesOnNewSession" classname="lol.omg.pocket.AccountViewModelTest" time="0.009"/>
+  <testcase name="emptyAddressesAndRetryAreUsable" classname="lol.omg.pocket.AccountViewModelTest" time="0.003"/>
+  <testcase name="rememberAndLogoutClearStateAndCredentials" classname="lol.omg.pocket.AccountViewModelTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

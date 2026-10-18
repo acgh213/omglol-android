@@ -16,7 +16,12 @@ class DeviceSmokeTest {
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Try demo").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Try demo").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Example Person").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("little-space.omg.lol").performScrollTo().performClick()
+        compose.onNodeWithTag("address-selector").performClick()
+        compose.onNodeWithTag("select-little-space").performClick()
+        compose.onNodeWithText("Statuslog").performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("A quiet evening in my little space.").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Refresh statuses").performScrollTo().performClick()
+        compose.onNodeWithText("Account").performClick()
         compose.onNodeWithText("Refresh").performScrollTo().performClick()
         compose.onNodeWithText("Exit demo").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Try demo").fetchSemanticsNodes().isNotEmpty() }
@@ -33,4 +38,19 @@ class DeviceSmokeTest {
         assertFalse(ciphertext.contains(c.email)); assertFalse(ciphertext.contains(c.apiKey))
         vault.clear(); assertNull(vault.load())
     }
+    @Test fun screenshotPolicyTracksSessionAndActivityRecreation() {
+        fun secure() = compose.activity.window.attributes.flags and android.view.WindowManager.LayoutParams.FLAG_SECURE != 0
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Try demo").fetchSemanticsNodes().isNotEmpty() }
+        compose.runOnIdle { assertTrue(secure()) }
+        compose.onNodeWithText("Try demo").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Example Person").fetchSemanticsNodes().isNotEmpty() }
+        compose.runOnIdle { assertFalse(secure()) }
+        compose.activityRule.scenario.recreate()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Example Person").fetchSemanticsNodes().isNotEmpty() }
+        compose.runOnIdle { assertFalse(secure()) }
+        compose.onNodeWithText("Exit demo").performScrollTo().performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Try demo").fetchSemanticsNodes().isNotEmpty() }
+        compose.runOnIdle { assertTrue(secure()) }
+    }
+
 }

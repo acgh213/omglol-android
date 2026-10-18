@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="lol.omg.pocket.StatusViewModelTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-18T02:40:30.093Z" hostname="5a0dd75f8ebf" time="0.021">
+  <properties/>
+  <testcase name="rapidRefreshUsesNewestRequestAndSameScopeDoesNotReload" classname="lol.omg.pocket.StatusViewModelTest" time="0.005"/>
+  <testcase name="demoAndNullScopeNeverCallLiveRepository" classname="lol.omg.pocket.StatusViewModelTest" time="0.003"/>
+  <testcase name="retryRecoversAndRefreshFailureRetainsSameAddressData" classname="lol.omg.pocket.StatusViewModelTest" time="0.002"/>
+  <testcase name="latestAddressWinsEvenIfOldRequestIgnoresCancellation" classname="lol.omg.pocket.StatusViewModelTest" time="0.003"/>
+  <testcase name="newSessionWithSameAddressClearsOldDataAndReloads" classname="lol.omg.pocket.StatusViewModelTest" time="0.002"/>
+  <testcase name="publicAuthFailureIsLocalToFeature" classname="lol.omg.pocket.StatusViewModelTest" time="0.002"/>
+  <testcase name="logoutClearsAndRejectsLateCompletion" classname="lol.omg.pocket.StatusViewModelTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

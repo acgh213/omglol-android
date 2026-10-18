@@ -34,7 +34,9 @@ Cassie wants site features added gradually and requested a plan before further i
 | 0.3: posting | Write a status for the selected address, submit, see the result | Create only initially; editing/deletion and social feed later |
 | 0.4: profile | Retrieve site source, edit, explicitly save or publish | Preserve CSS/head/theme/metadata; no lossy structured form or executable preview |
 | 0.5: Pastebin | List, view, create and edit pastes | Delete only with a separate explicit confirmation flow |
-| Later | /now, PURLs, pictures; account settings and DNS when useful | DNS and forwarding need purpose-built validation and change review |
+| 0.6: /now | Read and edit the selected address’s /now page | Explicit save, preserve page source, handle unsaved edits |
+| 0.7: weblog | Browse entries and create/edit weblog posts | Draft/publish behavior and configuration preservation verified before writes |
+| Later | PURLs, pictures; account settings and DNS when useful | DNS and forwarding need purpose-built validation and change review |
 
 Each slice gets its own acceptance check and installable APK. Future slices need their own API contract inspection and detailed plan before implementation. These are sequencing proposals, not delivery-date promises.
 
@@ -146,4 +148,4 @@ Reviewed 2026-10-17:
 - Current repository and baseline commit above: https://github.com/acgh213/omglol-android
 - Official API: https://api.omg.lol/ — Statuslog list/create, Web retrieve/save/publish, Pastebin and service index.
 
-Open product decision: accept the proposed Statuslog-first sequence or reorder around Cassie's actual use. No implementation has started under this plan. Screenshot scope is proposed in response to her reported screenshot restriction. Broader feature work starts after review of this plan.
+Accepted 2026-10-17: Cassie approved 0.2 and requested weblog and /now management later. Implementation proceeds on 0.2 only; later release numbers are provisional. Screenshot scope is proposed in response to her reported screenshot restriction. Broader feature work starts after review of this plan.
