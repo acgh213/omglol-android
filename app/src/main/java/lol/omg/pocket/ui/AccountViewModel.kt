@@ -10,6 +10,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import lol.omg.pocket.data.*
 import lol.omg.pocket.security.CredentialStore
+import lol.omg.pocket.security.AccountSession
 
 /** No credentials are included in UI state or SavedStateHandle. */
 data class AccountUiState(
@@ -34,7 +35,8 @@ data class AccountUiState(
 class AccountViewModel(
     private val live: AccountRepository,
     private val vault: CredentialStore,
-    private val storageDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val storageDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val session: AccountSession = AccountSession()
 ) : ViewModel() {
     private val mutable = MutableStateFlow(AccountUiState())
     val state = mutable.asStateFlow()
@@ -46,6 +48,11 @@ class AccountViewModel(
     // Serializes load/save/clear, including when a session is cancelled during IO.
     private val storageMutex = Mutex()
     init {
+        session.onRejected = { rejectedGeneration ->
+            viewModelScope.launch {
+                if (generation == rejectedGeneration && credentials != null) expire(ApiFailure(FailureKind.AUTH).message!!)
+            }
+        }
         val version = generation
         work = viewModelScope.launch {
             try {
@@ -100,6 +107,7 @@ class AccountViewModel(
                     }
                 }
                 if (version != generation) return@launch
+                session.activate(c, version, result.addresses.map { it.name }.toSet(), state.value.demo)
                 val selection = state.value.selected?.takeIf { name -> result.addresses.any { it.name == name } }
                     ?: result.addresses.firstOrNull()?.name
                 mutable.update { it.copy(busy = false, account = result.account, addresses = result.addresses,
@@ -145,7 +153,7 @@ class AccountViewModel(
     }
     private suspend fun expire(message: String) {
         // Cancel both requests; cleanup still completes, and its result is generation-guarded.
-        generation++; credentials = null
+        generation++; credentials = null; session.clear()
         val version = generation
         work?.cancel(); detailWork?.cancel()
         mutable.value = AccountUiState(restoring = false, busy = true)
@@ -154,7 +162,7 @@ class AccountViewModel(
         catch (_: Exception) { notice = "Couldn’t clear saved sign-in. Clear app storage in Android Settings." }
         if (version == generation) mutable.value = AccountUiState(restoring = false, error = message, notice = notice)
     }
-    private fun resetSession() { generation++; work?.cancel(); detailWork?.cancel(); credentials = null; mutable.value = AccountUiState(restoring = false) }
+    private fun resetSession() { generation++; work?.cancel(); detailWork?.cancel(); credentials = null; session.clear(); mutable.value = AccountUiState(restoring = false) }
     private suspend fun <T> storage(block: () -> T): T = withContext(storageDispatcher) { storageMutex.withLock { block() } }
     private fun safeMessage(e: Exception) = (e as? ApiFailure)?.message ?: "Something went wrong. Please try again."
 }

@@ -15,19 +15,24 @@ import lol.omg.pocket.ui.PocketApp
 import lol.omg.pocket.ui.StatusViewModel
 
 class MainActivity : ComponentActivity() {
-    private val model: AccountViewModel by viewModels {
-        object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                AccountViewModel(LiveAccountRepository(), KeystoreCredentialStore(applicationContext)) as T
-        }
+    private val session = lol.omg.pocket.security.AccountSession()
+    private val demo = lol.omg.pocket.data.DemoStatusRepository()
+    private val features by lazy { lol.omg.pocket.data.LiveFeatureRepository(session, demo = demo) }
+    private fun <T : ViewModel> factory(create: () -> T) = object : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <V : ViewModel> create(modelClass: Class<V>): V = create() as V
     }
-    private val statuses: StatusViewModel by viewModels()
+    private val model: AccountViewModel by viewModels {
+        factory { AccountViewModel(LiveAccountRepository(), KeystoreCredentialStore(applicationContext), session = session) }
+    }
+    private val statuses: StatusViewModel by viewModels { factory { StatusViewModel(demo = demo) } }
+    private val composer: lol.omg.pocket.ui.ComposerViewModel by viewModels { factory { lol.omg.pocket.ui.ComposerViewModel(features) } }
+    private val profile: lol.omg.pocket.ui.ProfileViewModel by viewModels { factory { lol.omg.pocket.ui.ProfileViewModel(features) } }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         enableEdgeToEdge()
-        setContent { PocketApp(model, statuses, ::protectScreenshots) }
+        setContent { PocketApp(model, statuses, composer, profile, ::protectScreenshots) }
     }
     private fun protectScreenshots(protect: Boolean) {
         if (protect) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)

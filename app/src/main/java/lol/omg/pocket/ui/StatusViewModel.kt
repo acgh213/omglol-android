@@ -26,6 +26,9 @@ class StatusViewModel(
     private var work: Job? = null
     fun setScope(scope: AddressScope?) {
         if (mutable.value.scope == scope) return
+        val oldScope = state.value.scope
+        if (demo is DemoStatusRepository && oldScope?.demo == true &&
+            (scope == null || scope.sessionGeneration != oldScope.sessionGeneration)) demo.clearPosts()
         request++; work?.cancel()
         mutable.value = StatusUiState(scope = scope)
         if (scope != null) refresh()

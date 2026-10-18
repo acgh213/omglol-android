@@ -25,7 +25,11 @@ class RetryUiTest {
             override fun clear() {}
         }
         val vm = AccountViewModel(repo, vault)
-        compose.setContent { PocketApp(vm) }
+        val features = LiveFeatureRepository(lol.omg.pocket.security.AccountSession())
+        val statuses = StatusViewModel()
+        val composer = ComposerViewModel(features)
+        val profile = ProfileViewModel(features)
+        compose.setContent { PocketApp(vm, statuses, composer, profile) }
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Try demo").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Account email").performTextInput("test@example.com")
         compose.onNodeWithText("API key").performTextInput("not-a-real-key")

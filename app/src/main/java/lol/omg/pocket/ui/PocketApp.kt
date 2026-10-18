@@ -15,23 +15,33 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 private val Lilac = Color(0xFF6853A0)
 @Composable fun PocketApp(
     model: AccountViewModel,
-    statusModel: StatusViewModel = viewModel(),
+    statusModel: StatusViewModel,
+    composerModel: ComposerViewModel,
+    profileModel: ProfileViewModel,
     onScreenshotProtection: (Boolean) -> Unit = {}
 ) {
     val state by model.state.collectAsStateWithLifecycle()
     val status by statusModel.state.collectAsStateWithLifecycle()
+    val composer by composerModel.state.collectAsStateWithLifecycle()
+    val profile by profileModel.state.collectAsStateWithLifecycle()
     var destination by rememberSaveable { mutableStateOf("Account") }
     val protectCredentials = state.account == null
     DisposableEffect(protectCredentials, onScreenshotProtection) {
         onScreenshotProtection(protectCredentials)
         onDispose { onScreenshotProtection(true) }
     }
-    LaunchedEffect(state.scope) { statusModel.setScope(state.scope) }
+    LaunchedEffect(state.scope) {
+        statusModel.setScope(state.scope)
+        composerModel.setScope(state.scope)
+    }
+    LaunchedEffect(state.scope, destination) { profileModel.setScope(state.scope, destination == "Profile") }
+    LaunchedEffect(composer.receipt) {
+        if (composer.receipt != null && composer.scope == state.scope) statusModel.refresh()
+    }
     LaunchedEffect(state.account == null) { if (state.account == null) destination = "Account" }
     MaterialTheme(colorScheme = lightColorScheme(primary = Lilac, secondary = Color(0xFF4E7068),
         background = Color(0xFFF9F7FC), surface = Color(0xFFF9F7FC))) {
@@ -41,6 +51,8 @@ private val Lilac = Color(0xFF6853A0)
                     icon = { Text("⌂") }, label = { Text("Account") })
                 NavigationBarItem(selected = destination == "Statuslog", onClick = { destination = "Statuslog" },
                     icon = { Text("☕") }, label = { Text("Statuslog") })
+                NavigationBarItem(selected = destination == "Profile", onClick = { destination = "Profile" },
+                    icon = { Text("✎") }, label = { Text("Profile") })
             }
         }) { insets ->
             Column(Modifier.fillMaxSize().padding(insets).imePadding()) {
@@ -66,18 +78,20 @@ private val Lilac = Color(0xFF6853A0)
                             verticalArrangement = Arrangement.spacedBy(20.dp)) {
                             SignIn(state, model::signIn, model::demo, model::refresh)
                             if (state.busy) TextButton(onClick = model::signOut) { Text("Cancel") }
-                            Text("Independent omg.lol client · Read-only", style = MaterialTheme.typography.labelSmall)
+                            Text("Independent omg.lol client", style = MaterialTheme.typography.labelSmall)
                         }
-                        destination == "Statuslog" -> StatusScreen(state.scope, status, statusModel::refresh, statusModel::retry)
+                        destination == "Statuslog" -> StatusScreen(state.scope, status, statusModel::refresh, statusModel::retry, composerModel::open)
+                        destination == "Profile" -> ProfileScreen(state.scope, profile, profileModel::refresh)
                         else -> Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
                             verticalArrangement = Arrangement.spacedBy(20.dp)) {
                             AccountScreen(state, model::refresh, model::selectAddress, model::signOut)
-                            Text("Independent omg.lol client · Read-only", style = MaterialTheme.typography.labelSmall)
+                            Text("Independent omg.lol client", style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
             }
         }
+        if (composer.open && state.scope != null && composer.scope == state.scope) ComposerDialog(composer, composerModel)
     }
 }
 
@@ -100,7 +114,7 @@ private val Lilac = Color(0xFF6853A0)
         Checkbox(rememberSignIn, { rememberSignIn = it }, enabled = !state.busy)
         Text("Remember on this device")
     }
-    Text("Use the API key from your omg.lol account settings. Remembering sign-in stores it encrypted on this device. Your key may grant more access than this read-only app uses.",
+    Text("Use the API key from your omg.lol account settings. Remembering sign-in stores it encrypted on this device. Your API key is sent only to omg.lol.",
         style = MaterialTheme.typography.bodySmall)
     Button(onClick = { signIn(email, key, rememberSignIn); key = "" }, enabled = !state.busy,
         modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) { Text(if (state.busy) "Connecting…" else "Connect account") }

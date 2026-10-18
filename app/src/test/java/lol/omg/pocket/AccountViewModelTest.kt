@@ -133,4 +133,14 @@ class AccountViewModelTest {
         repo.empty = true; vm.refresh(); advanceUntilIdle(); assertNull(vm.state.value.scope)
     }
 
+    @Test fun authenticatedFeatureRejectionClearsMatchingAccountSession() = runTest(dispatcher) {
+        val session = lol.omg.pocket.security.AccountSession(); val store = Store()
+        val vm = AccountViewModel(Repo(), store, dispatcher, session)
+        advanceUntilIdle(); vm.signIn("c@example.com", "k", true); advanceUntilIdle()
+        val scope = vm.state.value.scope!!
+        try { session.withCredentials(scope.sessionGeneration, scope.address) { throw ApiFailure(FailureKind.AUTH) } }
+        catch (_: ApiFailure) {}
+        advanceUntilIdle(); assertNull(vm.state.value.account); assertNull(store.saved)
+    }
+
 }
